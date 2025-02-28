@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Информация о клиенте</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Имя</dt>
+                    <dd class="col-sm-8">{{ customer.name }}</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ customer.email }}</dd>
+
+                    <dt class="col-sm-4">Телефон</dt>
+                    <dd class="col-sm-8">{{ customer.phone or '-' }}</dd>
+
+                    <dt class="col-sm-4">Компания</dt>
+                    <dd class="col-sm-8">{{ customer.company or '-' }}</dd>
+
+                    <dt class="col-sm-4">Создан</dt>
+                    <dd class="col-sm-8">{{ customer.created_at.strftime('%d.%m.%Y') }}</dd>
+                </dl>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('customers.edit_customer', id=customer.id) }}" class="btn btn-primary btn-sm">
+                    Редактировать
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Добавить заметку</h5>
+                <form action="{{ url_for('customers.add_note', id=customer.id) }}" method="post">
+                    {{ note_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ note_form.content(class="form-control", rows=3) }}
+                    </div>
+                    {{ note_form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Сделки</h5>
+                <form action="{{ url_for('customers.add_deal', id=customer.id) }}" method="post" class="mb-4">
+                    {{ deal_form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            {{ deal_form.title(class="form-control", placeholder="Название") }}
+                        </div>
+                        <div class="col-sm-3">
+                            {{ deal_form.amount(class="form-control", placeholder="Сумма") }}
+                        </div>
+                        <div class="col-sm-3">
+                            {{ deal_form.status(class="form-control") }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ deal_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </div>
+                </form>
+
+                {% if customer.deals.all() %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deal in customer.deals %}
+                            <tr>
+                                <td>{{ deal.title }}</td>
+                                <td>{{ "%.2f"|format(deal.amount or 0) }} ₽</td>
+                                <td>
+                                    {% if deal.status == 'new' %}
+                                    <span class="badge bg-primary">Новая</span>
+                                    {% elif deal.status == 'negotiation' %}
+                                    <span class="badge bg-warning">В переговорах</span>
+                                    {% elif deal.status == 'won' %}
+                                    <span class="badge bg-success">Выиграна</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Проиграна</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ deal.created_at.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Нет сделок</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Заметки</h5>
+                {% if customer.notes.all() %}
+                <div class="list-group list-group-flush">
+                    {% for note in customer.notes %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small class="text-muted">{{ note.timestamp.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ note.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Нет заметок</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="h3 mb-4">Сделки</h1>
+
+<div class="card">
+    <div class="card-body">
+        {% if deals %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Клиент</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Дата создания</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deal in deals %}
+                    <tr>
+                        <td>{{ deal.title }}</td>
+                        <td>
+                            <a href="{{ url_for('customers.customer', id=deal.customer.id) }}">
+                                {{ deal.customer.name }}
+                            </a>
+                        </td>
+                        <td>{{ "%.2f"|format(deal.amount or 0) }} ₽</td>
+                        <td>
+                            {% if deal.status == 'new' %}
+                            <span class="badge bg-primary">Новая</span>
+                            {% elif deal.status == 'negotiation' %}
+                            <span class="badge bg-warning">В переговорах</span>
+                            {% elif deal.status == 'won' %}
+                            <span class="badge bg-success">Выиграна</span>
+                            {% else %}
+                            <span class="badge bg-danger">Проиграна</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ deal.created_at.strftime('%d.%m.%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Нет сделок</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
