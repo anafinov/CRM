@@ -24,4 +24,12 @@ ENV/
 
 # Local development
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Migration backups
+migrations/versions/
+# Don't ignore the migrations directory itself
+
+# Temporary files
+*.bak
+*.tmp

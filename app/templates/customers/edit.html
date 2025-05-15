@@ -1,49 +1,105 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="h3 mb-0">{{ title }}</h1>
-            </div>
-            <div class="card-body">
-                <form action="" method="post" novalidate>
-                    {{ form.hidden_tag() }}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">{{ 'Новый клиент' if not customer else 'Редактировать клиента' }}</h1>
+    {% if customer %}
+    <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Назад
+    </a>
+    {% else %}
+    <a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> К списку клиентов
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {{ form.hidden_tag() }}
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Основная информация</h5>
                     <div class="mb-3">
                         {{ form.name.label(class="form-label") }}
                         {{ form.name(class="form-control") }}
                         {% for error in form.name.errors %}
-                        <span class="text-danger">{{ error }}</span>
+                        <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
+                    
                     <div class="mb-3">
                         {{ form.email.label(class="form-label") }}
                         {{ form.email(class="form-control") }}
                         {% for error in form.email.errors %}
-                        <span class="text-danger">{{ error }}</span>
+                        <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
+                    
                     <div class="mb-3">
                         {{ form.phone.label(class="form-label") }}
                         {{ form.phone(class="form-control") }}
-                        {% for error in form.phone.errors %}
-                        <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
                     </div>
+                    
                     <div class="mb-3">
                         {{ form.company.label(class="form-label") }}
                         {{ form.company(class="form-control") }}
-                        {% for error in form.company.errors %}
-                        <span class="text-danger">{{ error }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.website.label(class="form-label") }}
+                        {{ form.website(class="form-control", placeholder="https://example.com") }}
+                        {% for error in form.website.errors %}
+                        <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary") }}
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Дополнительная информация</h5>
+                    <div class="mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-select") }}
                     </div>
-                </form>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.source.label(class="form-label") }}
+                        {{ form.source(class="form-control", placeholder="Откуда пришел клиент") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.next_follow_up.label(class="form-label") }}
+                        {{ form.next_follow_up(class="form-control", type="date") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.tags.label(class="form-label") }}
+                        {{ form.tags(class="form-control", placeholder="важный, постоянный, новый") }}
+                    </div>
+                </div>
             </div>
-        </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=4) }}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                {{ form.submit(class="btn btn-primary") }}
+                {% if customer %}
+                <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-outline-secondary">Отмена</a>
+                {% else %}
+                <a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary">Отмена</a>
+                {% endif %}
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %} 

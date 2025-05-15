@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Категории клиентов</h1>
+    <a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Назад к списку
+    </a>
+</div>
+
+<!-- Статистика по категориям -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-info">Потенциальные</h6>
+                        <h2>{{ potential }}</h2>
+                    </div>
+                    <div class="bg-info bg-opacity-25 p-3 rounded">
+                        <i class="bi bi-person-badge text-info fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-success">Активные</h6>
+                        <h2>{{ active }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-25 p-3 rounded">
+                        <i class="bi bi-person-check text-success fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-warning">VIP</h6>
+                        <h2>{{ vip }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-25 p-3 rounded">
+                        <i class="bi bi-star-fill text-warning fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-secondary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-secondary">Неактивные</h6>
+                        <h2>{{ inactive }}</h2>
+                    </div>
+                    <div class="bg-secondary bg-opacity-25 p-3 rounded">
+                        <i class="bi bi-person-dash text-secondary fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Вкладки с категориями -->
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-tabs" id="clientTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="potential-tab" data-bs-toggle="tab" data-bs-target="#potential" 
+                    type="button" role="tab" aria-controls="potential" aria-selected="true">
+                    Потенциальные ({{ potential }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" 
+                    type="button" role="tab" aria-controls="active" aria-selected="false">
+                    Активные ({{ active }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vip-tab" data-bs-toggle="tab" data-bs-target="#vip" 
+                    type="button" role="tab" aria-controls="vip" aria-selected="false">
+                    VIP ({{ vip }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inactive-tab" data-bs-toggle="tab" data-bs-target="#inactive" 
+                    type="button" role="tab" aria-controls="inactive" aria-selected="false">
+                    Неактивные ({{ inactive }})
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content p-3" id="clientTabsContent">
+            <!-- Потенциальные клиенты -->
+            <div class="tab-pane fade show active" id="potential" role="tabpanel" aria-labelledby="potential-tab">
+                {% if potential_customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Компания</th>
+                                <th>Последний контакт</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in potential_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>{{ customer.company or '-' }}</td>
+                                <td>{{ customer.last_contact.strftime('%d.%m.%Y') if customer.last_contact else '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">Нет потенциальных клиентов</p>
+                {% endif %}
+            </div>
+            
+            <!-- Активные клиенты -->
+            <div class="tab-pane fade" id="active" role="tabpanel" aria-labelledby="active-tab">
+                {% if active_customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Компания</th>
+                                <th>Сделки</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in active_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>{{ customer.company or '-' }}</td>
+                                <td>
+                                    {% if customer.active_deals_count > 0 %}
+                                    <span class="badge bg-primary">{{ customer.active_deals_count }} активн.</span>
+                                    {% endif %}
+                                    <span class="badge bg-success">{{ '{:,.0f}'.format(customer.total_deal_amount) }} ₽</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">Нет активных клиентов</p>
+                {% endif %}
+            </div>
+            
+            <!-- VIP клиенты -->
+            <div class="tab-pane fade" id="vip" role="tabpanel" aria-labelledby="vip-tab">
+                {% if vip_customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Компания</th>
+                                <th>Сумма сделок</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in vip_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>{{ customer.company or '-' }}</td>
+                                <td><span class="badge bg-success">{{ '{:,.0f}'.format(customer.total_deal_amount) }} ₽</span></td>
+                                <td>
+                                    <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">Нет VIP клиентов</p>
+                {% endif %}
+            </div>
+            
+            <!-- Неактивные клиенты -->
+            <div class="tab-pane fade" id="inactive" role="tabpanel" aria-labelledby="inactive-tab">
+                {% if inactive_customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Компания</th>
+                                <th>Последний контакт</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in inactive_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>{{ customer.company or '-' }}</td>
+                                <td>{{ customer.last_contact.strftime('%d.%m.%Y') if customer.last_contact else '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('customers.customer', id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">Нет неактивных клиентов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

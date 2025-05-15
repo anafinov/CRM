@@ -1,50 +1,367 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Статистика</h5>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="text-center">
-                            <h2>{{ customers_count }}</h2>
-                            <p class="mb-0">Клиентов</p>
-                        </div>
+<div class="container-fluid p-0">
+    <!-- Основные метрики -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="dashboard-card dashboard-stats-card p-4">
+                <h6 class="card-title mb-3">Всего клиентов</h6>
+                <div class="d-flex align-items-center">
+                    <div class="stat-circle">
+                        <i class="bi bi-people-fill fs-3"></i>
                     </div>
-                    <div class="col-6">
-                        <div class="text-center">
-                            <h2>{{ deals_count }}</h2>
-                            <p class="mb-0">Сделок</p>
-                        </div>
+                    <div class="ms-3">
+                        <h2 class="stat-value">{{ customers_count }}</h2>
+                        <p class="stat-label">клиентов</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="dashboard-card dashboard-stats-card p-4">
+                <h6 class="card-title mb-3">Всего сделок</h6>
+                <div class="d-flex align-items-center">
+                    <div class="stat-circle">
+                        <i class="bi bi-briefcase-fill fs-3"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h2 class="stat-value">{{ deals_count }}</h2>
+                        <p class="stat-label">сделок</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="dashboard-card dashboard-stats-card p-4">
+                <h6 class="card-title mb-3">Общая сумма</h6>
+                <div class="d-flex align-items-center">
+                    <div class="stat-circle">
+                        <i class="bi bi-cash-stack fs-3"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h2 class="stat-value">{{ '{:,.0f}'.format(total_deal_amount) }} ₽</h2>
+                        <p class="stat-label">по всем сделкам</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="dashboard-card dashboard-stats-card p-4">
+                <h6 class="card-title mb-3">Средняя сделка</h6>
+                <div class="d-flex align-items-center">
+                    <div class="stat-circle">
+                        <i class="bi bi-graph-up-arrow fs-3"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h2 class="stat-value">{{ '{:,.0f}'.format(avg_deal_amount) }} ₽</h2>
+                        <p class="stat-label">в среднем</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Последние сделки</h5>
-                {% if recent_deals %}
-                <div class="list-group list-group-flush">
-                    {% for deal in recent_deals %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ deal.title }}</h6>
-                            <small>{{ deal.created_at.strftime('%d.%m.%Y') }}</small>
+    
+    <!-- Графики и статистика -->
+    <div class="row mb-4">
+        <!-- График: Новые клиенты за неделю -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Новые клиенты</h5>
+                <p class="text-muted">Динамика появления новых клиентов за последние 7 дней</p>
+                <div class="chart-container">
+                    <canvas id="customerChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- График: Сумма продаж по месяцам -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Продажи по месяцам</h5>
+                <p class="text-muted">Сумма продаж по месяцам за текущий год</p>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Статусы сделок -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Статусы сделок</h5>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="dealStatusChart"></canvas>
                         </div>
-                        <p class="mb-1">{{ deal.amount }} ₽</p>
-                        <small class="text-muted">{{ deal.customer.name }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="deals-status">
+                            {% if 'new' in deal_status_data %}
+                            <span class="status-badge new">Новые: {{ deal_status_data.new }}</span>
+                            {% endif %}
+                            {% if 'negotiation' in deal_status_data %}
+                            <span class="status-badge negotiation">В процессе: {{ deal_status_data.negotiation }}</span>
+                            {% endif %}
+                            {% if 'won' in deal_status_data %}
+                            <span class="status-badge won">Завершены: {{ deal_status_data.won }}</span>
+                            {% endif %}
+                            {% if 'lost' in deal_status_data %}
+                            <span class="status-badge lost">Потеряны: {{ deal_status_data.lost }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Последние активности -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Последние активности</h5>
+                <div class="activity-list mt-3">
+                    {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        {% if activity.type == 'customer' %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="bi bi-person-plus text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0"><strong>Новый клиент:</strong> {{ activity.data.name }}</p>
+                                <span class="activity-date">{{ activity.date.strftime('%d.%m.%Y, %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% elif activity.type == 'deal' %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="bi bi-briefcase text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0"><strong>Новая сделка:</strong> {{ activity.data.title }}</p>
+                                <p class="mb-0">{{ activity.data.amount }} ₽ - {{ activity.data.customer.name }}</p>
+                                <span class="activity-date">{{ activity.date.strftime('%d.%m.%Y, %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
+                    {% else %}
+                    <p class="text-muted">Нет недавних активностей</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Топ клиенты -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Топ клиенты</h5>
+                {% if top_customers %}
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Клиент</th>
+                                <th class="text-end">Общая сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in top_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td class="text-end">{{ '{:,.0f}'.format(customer.total) }} ₽</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">Нет активных сделок</p>
+                <p class="text-muted">Нет данных о клиентах</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Последние сделки -->
+        <div class="col-xl-6 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Последние сделки</h5>
+                {% if recent_deals %}
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Клиент</th>
+                                <th>Статус</th>
+                                <th class="text-end">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deal in recent_deals %}
+                            <tr>
+                                <td>{{ deal.title }}</td>
+                                <td>{{ deal.customer.name }}</td>
+                                <td>
+                                    <span class="status-badge {{ deal.status }}">
+                                        {% if deal.status == 'new' %}Новая
+                                        {% elif deal.status == 'negotiation' %}В процессе
+                                        {% elif deal.status == 'won' %}Завершена
+                                        {% elif deal.status == 'lost' %}Потеряна
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-end">{{ '{:,.0f}'.format(deal.amount) }} ₽</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Нет активных сделок</p>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Данные для графика новых клиентов
+    const customersCtx = document.getElementById('customerChart').getContext('2d');
+    new Chart(customersCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ dates|tojson }}'),
+            datasets: [{
+                label: 'Новые клиенты',
+                data: JSON.parse('{{ customer_counts|tojson }}'),
+                fill: true,
+                backgroundColor: 'rgba(58, 134, 255, 0.2)',
+                borderColor: 'rgba(58, 134, 255, 1)',
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(58, 134, 255, 1)',
+                pointBorderColor: '#fff',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    // Данные для графика продаж по месяцам
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ months_labels|tojson }}'),
+            datasets: [{
+                label: 'Продажи',
+                data: JSON.parse('{{ monthly_amounts|tojson }}'),
+                backgroundColor: 'rgba(131, 56, 236, 0.7)',
+                borderColor: 'rgba(131, 56, 236, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' ₽';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Данные для графика статусов сделок
+    const statusLabels = {
+        'new': 'Новые',
+        'negotiation': 'В процессе',
+        'won': 'Завершены',
+        'lost': 'Потеряны'
+    };
+    
+    const statusColors = {
+        'new': '#1976d2',
+        'negotiation': '#ff8f00',
+        'won': '#43a047',
+        'lost': '#e53935'
+    };
+    
+    // Получаем данные из deal_status_data
+    const dealStatusData = JSON.parse('{{ deal_status_data|tojson }}');
+    const statuses = Object.keys(dealStatusData || {});
+    const statusCounts = statuses.map(status => dealStatusData[status]);
+    const statusLabelsDisplay = statuses.map(status => statusLabels[status] || status);
+    const statusColorsDisplay = statuses.map(status => statusColors[status] || '#000000');
+    
+    if(statuses.length > 0) {
+        const dealStatusCtx = document.getElementById('dealStatusChart').getContext('2d');
+        new Chart(dealStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabelsDisplay,
+                datasets: [{
+                    data: statusCounts,
+                    backgroundColor: statusColorsDisplay,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    } else {
+        // Если данных нет, показываем сообщение
+        const container = document.getElementById('dealStatusChart').parentNode;
+        container.innerHTML = '<p class="text-center text-muted">Нет данных о статусах сделок</p>';
+    }
+});
+</script>
 {% endblock %} 

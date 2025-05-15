@@ -4,8 +4,21 @@
 <div class="row">
     <div class="col-md-4">
         <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Информация о клиенте</h5>
+                <div>
+                    {% if customer.category == 'potential' %}
+                    <span class="badge bg-info">Потенциальный</span>
+                    {% elif customer.category == 'active' %}
+                    <span class="badge bg-success">Активный</span>
+                    {% elif customer.category == 'vip' %}
+                    <span class="badge bg-warning">VIP</span>
+                    {% elif customer.category == 'inactive' %}
+                    <span class="badge bg-secondary">Неактивный</span>
+                    {% endif %}
+                </div>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Информация о клиенте</h5>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Имя</dt>
                     <dd class="col-sm-8">{{ customer.name }}</dd>
@@ -19,20 +32,82 @@
                     <dt class="col-sm-4">Компания</dt>
                     <dd class="col-sm-8">{{ customer.company or '-' }}</dd>
 
+                    {% if customer.website %}
+                    <dt class="col-sm-4">Веб-сайт</dt>
+                    <dd class="col-sm-8">
+                        <a href="{{ customer.website }}" target="_blank">{{ customer.website }}</a>
+                    </dd>
+                    {% endif %}
+
+                    {% if customer.address %}
+                    <dt class="col-sm-4">Адрес</dt>
+                    <dd class="col-sm-8">{{ customer.address }}</dd>
+                    {% endif %}
+
+                    {% if customer.source %}
+                    <dt class="col-sm-4">Источник</dt>
+                    <dd class="col-sm-8">{{ customer.source }}</dd>
+                    {% endif %}
+
                     <dt class="col-sm-4">Создан</dt>
                     <dd class="col-sm-8">{{ customer.created_at.strftime('%d.%m.%Y') }}</dd>
+
+                    {% if customer.last_contact %}
+                    <dt class="col-sm-4">Посл. контакт</dt>
+                    <dd class="col-sm-8">{{ customer.last_contact.strftime('%d.%m.%Y') }}</dd>
+                    {% endif %}
+
+                    {% if customer.next_follow_up %}
+                    <dt class="col-sm-4">След. контакт</dt>
+                    <dd class="col-sm-8">{{ customer.next_follow_up.strftime('%d.%m.%Y') }}</dd>
+                    {% endif %}
+
+                    {% if customer.tags %}
+                    <dt class="col-sm-4">Теги</dt>
+                    <dd class="col-sm-8">
+                        {% for tag in customer.tags.split(',') %}
+                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </dd>
+                    {% endif %}
                 </dl>
+
+                {% if customer.description %}
+                <hr>
+                <h6>Дополнительная информация:</h6>
+                <p class="mb-0">{{ customer.description }}</p>
+                {% endif %}
             </div>
-            <div class="card-footer">
+            <div class="card-footer d-flex">
                 <a href="{{ url_for('customers.edit_customer', id=customer.id) }}" class="btn btn-primary btn-sm">
-                    Редактировать
+                    <i class="bi bi-pencil me-1"></i> Редактировать
+                </a>
+                <a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary btn-sm ms-2">
+                    <i class="bi bi-arrow-left me-1"></i> Назад
                 </a>
             </div>
         </div>
 
         <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Категория клиента</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Добавить заметку</h5>
+                <form action="{{ url_for('customers.update_category', id=customer.id) }}" method="post">
+                    {{ category_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ category_form.category(class="form-select") }}
+                    </div>
+                    {{ category_form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Добавить заметку</h5>
+            </div>
+            <div class="card-body">
                 <form action="{{ url_for('customers.add_note', id=customer.id) }}" method="post">
                     {{ note_form.hidden_tag() }}
                     <div class="mb-3">
@@ -46,8 +121,10 @@
 
     <div class="col-md-8">
         <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Сделки</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Сделки</h5>
                 <form action="{{ url_for('customers.add_deal', id=customer.id) }}" method="post" class="mb-4">
                     {{ deal_form.hidden_tag() }}
                     <div class="row g-3">
@@ -58,7 +135,7 @@
                             {{ deal_form.amount(class="form-control", placeholder="Сумма") }}
                         </div>
                         <div class="col-sm-3">
-                            {{ deal_form.status(class="form-control") }}
+                            {{ deal_form.status(class="form-select") }}
                         </div>
                         <div class="col-sm-2">
                             {{ deal_form.submit(class="btn btn-primary w-100") }}
@@ -97,17 +174,28 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td><strong>Итого</strong></td>
+                                <td colspan="3"><strong>{{ '{:,.2f}'.format(customer.total_deal_amount) }} ₽</strong></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">Нет сделок</p>
+                <div class="text-center py-4">
+                    <i class="bi bi-briefcase fs-1 text-muted"></i>
+                    <p class="text-muted mt-3">Нет сделок</p>
+                </div>
                 {% endif %}
             </div>
         </div>
 
         <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Заметки</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Заметки</h5>
                 {% if customer.notes.all() %}
                 <div class="list-group list-group-flush">
                     {% for note in customer.notes %}
@@ -120,7 +208,10 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">Нет заметок</p>
+                <div class="text-center py-4">
+                    <i class="bi bi-journal-text fs-1 text-muted"></i>
+                    <p class="text-muted mt-3">Нет заметок</p>
+                </div>
                 {% endif %}
             </div>
         </div>

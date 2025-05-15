@@ -29,6 +29,26 @@ class Customer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     notes = db.relationship('Note', backref='customer', lazy='dynamic')
     deals = db.relationship('Deal', backref='customer', lazy='dynamic')
+    
+    # Новые поля для расширенной информации о клиенте
+    category = db.Column(db.String(20), default='potential')  # potential, active, vip, inactive
+    address = db.Column(db.String(200))
+    website = db.Column(db.String(100))
+    source = db.Column(db.String(50))  # откуда пришел клиент
+    last_contact = db.Column(db.DateTime)  # дата последнего контакта
+    next_follow_up = db.Column(db.DateTime)  # дата следующего контакта
+    description = db.Column(db.Text)  # дополнительная информация
+    tags = db.Column(db.String(200))  # теги через запятую
+    
+    @property
+    def total_deal_amount(self):
+        """Возвращает общую сумму сделок клиента"""
+        return sum(deal.amount or 0 for deal in self.deals)
+    
+    @property
+    def active_deals_count(self):
+        """Возвращает количество активных сделок"""
+        return self.deals.filter(Deal.status.in_(['new', 'negotiation'])).count()
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,6 +65,11 @@ class Deal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Новые поля для расширенной информации о сделке
+    expected_close_date = db.Column(db.DateTime)
+    description = db.Column(db.Text)
+    probability = db.Column(db.Integer, default=50)  # вероятность закрытия в %
 
 @login_manager.user_loader
 def load_user(id):
